@@ -411,9 +411,9 @@ class MiniCssExtractPlugin {
                     'return new Promise(function(resolve, reject) {',
                     Template.indent([
                       'var REL = "stylesheet";',
-                      `var skin = window.${process.env.THEME_FIELD ||
-                        '__SKIN__'} || "${process.env.THEME || 'default'}";`,
-                      'var rel = title == skin ? "alternate " + REL : REL;',
+                      `var rel = title == (window.${process.env.THEME_FIELD ||
+                        '__SKIN__'} || "${process.env.THEME ||
+                        'default'}") ? REL : "alternate " + REL;`,
                       `var href = ${linkHrefPath.substring(
                         0,
                         index

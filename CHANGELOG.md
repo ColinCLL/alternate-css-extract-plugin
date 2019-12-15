@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.9.0](https://github.com/Maorey/alternate-css-extract-plugin/releases/tag/v0.9.0) (2019-12-15)
+
+
+### Features
+
+* alternate stylesheet support
+
+
 ## [0.8.0](https://github.com/webpack-contrib/mini-css-extract-plugin/compare/v0.7.0...v0.8.0) (2019-07-16)
 
 
