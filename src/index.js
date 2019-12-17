@@ -19,7 +19,7 @@ const REGEXP_CHUNKHASH = /\[chunkhash(?::(\d+))?\]/i;
 const REGEXP_CONTENTHASH = /\[contenthash(?::(\d+))?\]/i;
 const REGEXP_NAME = /\[name\]/i;
 const REGEXP_PLACEHOLDERS = /\[(name|id|chunkhash)\]/g;
-const REGEXP_THEME = /[?&]theme=([^|& ]*)\|?([^& ]*)/;
+const REGEXP_SKIN = /[?&]skin=([^|& ]*)\|?([^& ]*)/;
 const REGEXP_FILENAME = /^(.+[\\/])?([^.]+\.)/;
 const REGEXP_CSSNAME = /\+(?:chunkId|\({.+}\[chunkId\]\|\|chunkId\))\+/;
 const DEFAULT_FILENAME = '[name].css';
@@ -142,26 +142,24 @@ class MiniCssExtractPlugin {
         (result, { chunk }) => {
           const renderedModules = this.getRenderedModules(chunk);
           // eslint-disable-next-line guard-for-in
-          for (const theme in renderedModules) {
+          for (const skin in renderedModules) {
             result.push({
               render: () =>
                 this.renderContentAsset(
                   compilation,
                   chunk,
-                  renderedModules[theme],
+                  renderedModules[skin],
                   compilation.runtimeTemplate.requestShortener
                 ),
               filenameTemplate: ({ chunk: chunkData }) =>
                 this.options
                   .moduleFilename(chunkData)
-                  .replace(REGEXP_FILENAME, `$1${theme ? `${theme}@` : ''}$2`),
+                  .replace(REGEXP_FILENAME, `$1${skin ? `${skin}@` : ''}$2`),
               pathOptions: {
                 chunk,
                 contentHashType: MODULE_TYPE,
               },
-              identifier: `${pluginName}.${chunk.id}${
-                theme ? `@${theme}` : ''
-              }`,
+              identifier: `${pluginName}.${chunk.id}${skin ? `@${skin}` : ''}`,
               hash: chunk.contentHash[MODULE_TYPE],
             });
           }
@@ -173,26 +171,24 @@ class MiniCssExtractPlugin {
         (result, { chunk }) => {
           const renderedModules = this.getRenderedModules(chunk);
           // eslint-disable-next-line guard-for-in
-          for (const theme in renderedModules) {
+          for (const skin in renderedModules) {
             result.push({
               render: () =>
                 this.renderContentAsset(
                   compilation,
                   chunk,
-                  renderedModules[theme],
+                  renderedModules[skin],
                   compilation.runtimeTemplate.requestShortener
                 ),
               filenameTemplate: this.options.chunkFilename.replace(
                 REGEXP_FILENAME,
-                `$1${theme ? `${theme}@` : ''}$2`
+                `$1${skin ? `${skin}@` : ''}$2`
               ),
               pathOptions: {
                 chunk,
                 contentHashType: MODULE_TYPE,
               },
-              identifier: `${pluginName}.${chunk.id}${
-                theme ? `@${theme}` : ''
-              }`,
+              identifier: `${pluginName}.${chunk.id}${skin ? `@${skin}` : ''}`,
               hash: chunk.contentHash[MODULE_TYPE],
             });
           }
@@ -269,7 +265,7 @@ class MiniCssExtractPlugin {
           if (Object.keys(chunkMap).length > 0) {
             const chunkMaps = chunk.getChunkMaps();
             const { crossOriginLoading } = mainTemplate.outputOptions;
-            const themes = this.getThemes(chunk);
+            const skins = this.getSkins(chunk);
             const linkHrefPath = mainTemplate.getAssetPath(
               JSON.stringify(this.options.chunkFilename),
               {
@@ -368,18 +364,6 @@ class MiniCssExtractPlugin {
               '}',
               'tag = document.createElement("link");',
               'tag.type = "text/css";',
-              'tag.onload = resolve;',
-              'tag.onerror = function(event) {',
-              Template.indent([
-                'delete installedCssChunks[chunkId];',
-                'var request = event && event.target && event.target.src || fullhref;',
-                'var err = new Error("加载" + chunkId + ":" + request + "失败!");',
-                'err.code = "CSS_CHUNK_LOAD_FAILED";',
-                'err.request = request;',
-                'tag.parentNode.removeChild(tag);',
-                'reject(err);',
-              ]),
-              '};',
             ]);
             const cssChunkLoaderAppend = Template.asString([
               'tag.href = fullhref;',
@@ -399,7 +383,7 @@ class MiniCssExtractPlugin {
               Template.indent(['installedCssChunks[chunkId] = 0;']),
               '})',
             ]);
-            if (themes.length) {
+            if (skins.length) {
               let index = REGEXP_CSSNAME.exec(linkHrefPath);
               if (index) {
                 // eslint-disable-next-line prefer-destructuring
@@ -411,9 +395,10 @@ class MiniCssExtractPlugin {
                     'return new Promise(function(resolve, reject) {',
                     Template.indent([
                       'var REL = "stylesheet";',
-                      `var rel = title == (window.${process.env.THEME_FIELD ||
-                        '__SKIN__'} || "${process.env.THEME ||
-                        'default'}") ? REL : "alternate " + REL;`,
+                      `var isAlternate = title && title != (window.${process.env
+                        .SKIN_FIELD || '__SKIN__'} || "${process.env.SKIN ||
+                        'default'}") ? "alternate " : "";`,
+                      `var rel = isAlternate + REL;`,
                       `var href = ${linkHrefPath.substring(
                         0,
                         index
@@ -423,6 +408,23 @@ class MiniCssExtractPlugin {
                       cssChunkLoaderCommon,
                       'tag.rel = rel;',
                       'title && (tag.title = title);',
+                      'isAlternate ? resolve() : (tag.onload = resolve);',
+                      'tag.onerror = function(event) {',
+                      Template.indent([
+                        'tag.parentNode.removeChild(tag);',
+                        'delete installedCssChunks[chunkId];',
+                        `if (isAlternate) {`,
+                        Template.indent([
+                          'console.warn("加载备用皮肤" + chunkId + ":" + fullhref + "失败!");',
+                          'return;',
+                        ]),
+                        '}',
+                        'var err = new Error("加载" + chunkId + ":" + fullhref + "失败!");',
+                        'err.code = "CSS_CHUNK_LOAD_FAILED";',
+                        'err.request = fullhref;',
+                        'reject(err);',
+                      ]),
+                      '};',
                       cssChunkLoaderAppend,
                     ]),
                     '});',
@@ -430,7 +432,7 @@ class MiniCssExtractPlugin {
                   '};',
                   IfElseIf,
                   Template.indent([
-                    `promises.push(installedCssChunks[chunkId] = Promise.all([cssChunkLoader("${themes.join(
+                    `promises.push(installedCssChunks[chunkId] = Promise.all([cssChunkLoader("${skins.join(
                       '"),cssChunkLoader("'
                     )}")]).${then});`,
                   ]),
@@ -449,6 +451,17 @@ class MiniCssExtractPlugin {
                   `var href = ${linkHrefPath};`,
                   cssChunkLoaderCommon,
                   'tag.rel = REL;',
+                  'tag.onload = resolve;',
+                  'tag.onerror = function(event) {',
+                  Template.indent([
+                    'tag.parentNode.removeChild(tag);',
+                    'delete installedCssChunks[chunkId];',
+                    'var err = new Error("加载" + chunkId + ":" + fullhref + "失败!");',
+                    'err.code = "CSS_CHUNK_LOAD_FAILED";',
+                    'err.request = fullhref;',
+                    'reject(err);',
+                  ]),
+                  '};',
                   cssChunkLoaderAppend,
                 ]),
                 `}).${then});`,
@@ -479,30 +492,30 @@ class MiniCssExtractPlugin {
   }
 
   getRenderedModules(chunk) {
-    const themes = {};
-    let theme;
+    const skins = {};
+    let skin;
     for (const module of chunk.modulesIterable) {
       if (module.type === MODULE_TYPE) {
-        theme = (REGEXP_THEME.exec(module.identifier()) || [])[1] || '';
-        (themes[theme] || (themes[theme] = [])).push(module);
+        skin = (REGEXP_SKIN.exec(module.identifier()) || [])[1] || '';
+        (skins[skin] || (skins[skin] = [])).push(module);
       }
     }
 
-    return themes;
+    return skins;
   }
 
-  getThemes(mainChunk) {
-    const themes = new Set();
+  getSkins(mainChunk) {
+    const skins = new Set();
 
     for (const chunk of mainChunk.getAllAsyncChunks()) {
       for (const module of chunk.modulesIterable) {
         if (module.type === MODULE_TYPE) {
-          themes.add((REGEXP_THEME.exec(module.identifier()) || [])[1] || '');
+          skins.add((REGEXP_SKIN.exec(module.identifier()) || [])[1] || '');
         }
       }
     }
 
-    return Array.from(themes);
+    return Array.from(skins);
   }
 
   isRedundantObject(obj) {

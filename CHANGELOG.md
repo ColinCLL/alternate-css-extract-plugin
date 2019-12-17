@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/Maorey/alternate-css-extract-plugin/releases/tag/v1.0.0) (2019-12-17)
+
+### Breaking
+
+* rename 'theme' to 'skin' in environment and query string
+
+### Features
+
+* optimize alternate stylesheet support
+
+
 ## [0.9.0](https://github.com/Maorey/alternate-css-extract-plugin/releases/tag/v0.9.0) (2019-12-15)
 
 
