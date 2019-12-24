@@ -12,26 +12,14 @@ module.exports = {
             loader: 'css-loader',
             options: {
               modules: {
-                localIdentName: '[local]',
+                mode: 'pure',
+                localIdentName: 'foo__[name]__[local]',
               },
             },
           },
         ],
       },
     ],
-  },
-  optimization: {
-    splitChunks: {
-      cacheGroups: {
-        cssDedupe: {
-          test: /\.css$/,
-          name: 'dedupe',
-          chunks: 'all',
-          minChunks: 2,
-          enforce: true,
-        },
-      },
-    },
   },
   plugins: [
     new Self({

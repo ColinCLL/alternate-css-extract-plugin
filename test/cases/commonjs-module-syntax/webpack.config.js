@@ -7,31 +7,22 @@ module.exports = {
       {
         test: /\.css$/,
         use: [
-          Self.loader,
+          {
+            loader: Self.loader,
+            options: { esModule: false },
+          },
           {
             loader: 'css-loader',
             options: {
               modules: {
-                localIdentName: '[local]',
+                mode: 'local',
+                localIdentName: 'foo__[name]__[local]',
               },
             },
           },
         ],
       },
     ],
-  },
-  optimization: {
-    splitChunks: {
-      cacheGroups: {
-        cssDedupe: {
-          test: /\.css$/,
-          name: 'dedupe',
-          chunks: 'all',
-          minChunks: 2,
-          enforce: true,
-        },
-      },
-    },
   },
   plugins: [
     new Self({
