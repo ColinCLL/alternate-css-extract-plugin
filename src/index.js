@@ -395,10 +395,6 @@ class MiniCssExtractPlugin {
                     'return new Promise(function(resolve, reject) {',
                     Template.indent([
                       'var REL = "stylesheet";',
-                      `var isAlternate = title && title != (window.${process.env
-                        .SKIN_FIELD || '__SKIN__'} || "${process.env.SKIN ||
-                        'default'}") ? "alternate " : "";`,
-                      `var rel = isAlternate + REL;`,
                       `var href = ${linkHrefPath.substring(
                         0,
                         index
@@ -406,9 +402,17 @@ class MiniCssExtractPlugin {
                         index
                       )};`,
                       cssChunkLoaderCommon,
-                      'tag.rel = rel;',
                       'title && (tag.title = title);',
-                      'isAlternate ? resolve() : (tag.onload = resolve);',
+                      `var isAlternate = title && title != (window.${process.env
+                        .SKIN_FIELD || '__SKIN__'} || "${process.env.SKIN ||
+                        'default'}");`,
+                      'isAlternate ? resolve() : (tag.onload = title ? function (event) {',
+                      Template.indent([
+                        'tag.disabled = true;',
+                        'tag.disabled = false;',
+                        'resolve(event);',
+                      ]),
+                      '} : resolve);',
                       'tag.onerror = function(event) {',
                       Template.indent([
                         'tag.parentNode.removeChild(tag);',
@@ -425,6 +429,7 @@ class MiniCssExtractPlugin {
                         'reject(err);',
                       ]),
                       '};',
+                      'tag.rel = isAlternate ? "alternate " + REL : REL;',
                       cssChunkLoaderAppend,
                     ]),
                     '});',
