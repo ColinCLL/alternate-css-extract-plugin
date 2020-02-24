@@ -1,12 +1,12 @@
 {
-  "name": "mini-css-extract-plugin",
+  "name": "alternate-css-extract-plugin",
   "version": "0.9.0",
-  "description": "extracts CSS into separate files",
+  "description": "extracts CSS into separate files, identifying alternate stylesheet by skin parameter",
   "license": "MIT",
-  "repository": "webpack-contrib/mini-css-extract-plugin",
-  "author": "Tobias Koppers @sokra",
-  "homepage": "https://github.com/webpack-contrib/mini-css-extract-plugin",
-  "bugs": "https://github.com/webpack-contrib/mini-css-extract-plugin/issues",
+  "repository": "Maorey/alternate-css-extract-plugin",
+  "author": "Tobias Koppers @sokra Maorey",
+  "homepage": "https://github.com/Maorey/alternate-css-extract-plugin",
+  "bugs": "https://github.com/Maorey/alternate-css-extract-plugin/issues",
   "main": "dist/cjs.js",
   "engines": {
     "node": ">= 6.9.0"
@@ -80,6 +80,7 @@
     "webpack",
     "css",
     "extract",
-    "hmr"
+    "hmr",
+    "alternate stylesheet"
   ]
 }

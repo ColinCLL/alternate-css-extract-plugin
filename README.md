@@ -3,7 +3,8 @@
   <a href="https://webpack.js.org/">
     <img width="200" height="200" vspace="" hspace="25" src="https://cdn.rawgit.com/webpack/media/e7485eb2/logo/icon-square-big.svg">
   </a>
-  <h1>mini-css-extract-plugin</h1>
+  <h1>alternate-css-extract-plugin</h1>
+  forked from <a href="https://github.com/webpack-contrib/mini-css-extract-plugin">mini-css-extract-plugin</a>
 </div>
 
 [![npm][npm]][npm-url]
@@ -14,21 +15,21 @@
 [![chat][chat]][chat-url]
 [![size][size]][size-url]
 
-# mini-css-extract-plugin
+# alternate-css-extract-plugin
 
-在原插件的基础上, 根据查询参数`skin`将相同chunk相同`skin`的模块合并为`${skin}@${chunkName}`模块(文件), 未指定`skin`参数(或为空)的与原插件行为保持一致.
+在原插件的基础上, 根据查询参数`skin`将相同 chunk 相同`skin`的模块合并为`${skin}@${chunkName}`模块(文件), 未指定`skin`参数(或为空)的与原插件行为保持一致.
 
 异步加载皮肤文件时, 当前皮肤名为: `window.${process.env.SKIN_FIELD || '__SKIN__'} || "${process.env.SKIN || 'default'}"`, 其余作为备选. 备选不影响加载, 即, 既不需要等待加载完成, 也不会因加载失败导致失败.
 
 示例:
 
-``` TypeScript
+```TypeScript
 import LIGHT from '@/scss/light.module.scss?skin=light'
 import DARK from '@/scss/dark.module.scss?skin=dark'
 import 'normalize.css'
 ```
 
-上述代码将生成3个文件. 异步加载(`import('...')`)时, `normalize.css`加载后即生效, `light`/`dark`根据当前皮肤最多只有一个样式生效. 入口chunk需要注入`html`标签的, 可根据文件名识别皮肤样式, 参考[示例](https://github.com/Maorey/vue-tpl/blob/master/build/insertPreload.js#L248).
+上述代码将生成 3 个文件. 异步加载(`import('...')`)时, `normalize.css`加载后即生效, `light`/`dark`根据当前皮肤最多只有一个样式生效. 入口 chunk 需要注入`html`标签的, 可根据文件名识别皮肤样式, 参考[示例](https://github.com/Maorey/vue-tpl/blob/master/build/insertPreload.js#L248).
 
 切换皮肤:
 
