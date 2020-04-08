@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.9.3](https://github.com/Maorey/alternate-css-extract-plugin/releases/tag/v0.9.3) (2020-04-08)
+
+* Fix fireFox broken
+
 ## [0.9.0-1](https://github.com/Maorey/alternate-css-extract-plugin/releases/tag/v0.9.0-1) (2020-03-17)
 
 * Merge from base repo

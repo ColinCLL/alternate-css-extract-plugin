@@ -488,29 +488,30 @@ class MiniCssExtractPlugin {
               '',
               `// ${pluginName} CSS loading`,
               `var cssChunks = ${JSON.stringify(chunkMap)};`,
+              'if(installedCssChunks[chunkId]) { promises.push(installedCssChunks[chunkId]); }',
+              'else if(installedCssChunks[chunkId] !== 0 && cssChunks[chunkId]) {',
             ]);
-            const IfElseIf =
-              'if(installedCssChunks[chunkId]) { promises.push(installedCssChunks[chunkId]); }\n' +
-              'else if(installedCssChunks[chunkId] !== 0 && cssChunks[chunkId]) {';
             const cssChunkLoaderCommon = Template.asString([
-              `var fullhref = ${mainTemplate.requireFn}.p + href;`,
-              'var DOC = document;',
-              'var getElementsByTagName = function() { return DOC.getElementsByTagName.apply(DOC, arguments); }',
-              'var existingTags = getElementsByTagName("link");',
-              'var i = 0, tag, dataHref;',
-              'while(i < existingTags.length) {',
+              `var fullhref = ${mainTemplate.requireFn}.p + href, DOC = document, tag;`,
+              'for (',
               Template.indent([
-                'tag = existingTags[i++];',
-                'dataHref = tag.getAttribute("data-href") || tag.getAttribute("href");',
-                'if(tag.rel === REL && (dataHref === href || dataHref === fullhref)) { return resolve(); }',
+                'var existingTags = [',
+                Template.indent([
+                  "DOC.querySelectorAll('link[rel=\"' + REL + '\"]'),",
+                  'DOC.querySelectorAll("style")',
+                ]),
+                '], i = 0, list, j;',
+                'i < 2;',
+                'i++',
               ]),
-              '}',
-              'existingTags = getElementsByTagName("style"), i = 0;',
-              'while(i < existingTags.length) {',
+              ') {',
               Template.indent([
-                'tag = existingTags[i++];',
-                'dataHref = tag.getAttribute("data-href");',
-                'if(dataHref === href || dataHref === fullhref) { return resolve(); }',
+                'for ( list = existingTags[i], j = 0; j < list.length; j++ ) {',
+                Template.indent([
+                  'tag = (tag = list[j]).getAttribute("data-href") || tag.getAttribute("href");',
+                  'if(tag === href || tag === fullhref) { return resolve(); }',
+                ]),
+                '}',
               ]),
               '}',
               'tag = DOC.createElement("link");',
@@ -522,7 +523,7 @@ class MiniCssExtractPlugin {
                     crossOriginLoading
                   )});`
                 : ''
-            }\ngetElementsByTagName("head")[0].appendChild(tag);`;
+            }\nDOC.head.appendChild(tag);`;
             const then =
               'then(function() { installedCssChunks[chunkId] = 0; })';
 
@@ -534,58 +535,60 @@ class MiniCssExtractPlugin {
                 index = index.index;
                 return Template.asString([
                   prefix,
-                  IfElseIf,
                   Template.indent([
                     `var skins = ${JSON.stringify(skinMap.skins)};`,
-                    `var cssChunkInfo = ${
+                    `var alternate = ${
                       skinMap.map
                         ? `${JSON.stringify(skinMap.map)}[chunkId]`
                         : 0
                     };`,
                     // 一群工具人(要空间要速度不要易读)
-                    'var len, skin, path, hash, REL;',
-                    `if (cssChunkInfo && (cssChunkInfo = ${
+                    'var len, skin, path, hash, sheet;',
+                    `if (alternate && (alternate = ${
                       skinMap.info
-                        ? `${JSON.stringify(skinMap.info)}[cssChunkInfo]`
+                        ? `${JSON.stringify(skinMap.info)}[alternate]`
                         : 0
                     })) {`,
                     Template.indent([
-                      'var lLen = cssChunkInfo.l && cssChunkInfo.l.length;',
+                      'var lLen = alternate.l && alternate.l.length;',
                       'if (lLen) {',
                       Template.indent([
-                        'REL = [], len = skins.length, path = hash = 0;',
+                        'sheet = [], len = skins.length, path = hash = 0;',
                         'while (path < len) {',
                         Template.indent([
                           'skin = skins[path++];',
-                          'while (hash < lLen) { if (skin === cssChunkInfo.l[hash++]) { skin = 0; break; } }',
-                          'skin && REL.push(skin);',
+                          'while (hash < lLen) { if (skin === alternate.l[hash++]) { skin = 0; break; } }',
+                          'skin && sheet.push(skin);',
                         ]),
                         '}',
                       ]),
-                      '} else { REL = skins; }',
-                      'cssChunkInfo.e && (REL = REL.concat(cssChunkInfo.e));',
-                      'skins = REL;',
+                      '} else { sheet = skins; }',
+                      'alternate.e && (sheet = sheet.concat(alternate.e));',
+                      'skins = sheet;',
                     ]),
                     '}',
                     'if ((len = skins.length)) {',
                     Template.indent([
                       `path = ${linkHrefPath.substring(0, index)};`,
                       `hash = ${linkHrefPath.substring(index + 1)};`,
-                      'REL = "stylesheet";',
+                      'sheet = "stylesheet";',
+                      'alternate = "alternate ";',
                       'skin = function(title) {',
                       Template.indent([
                         'return new Promise(function(resolve, reject) {',
                         Template.indent([
-                          `var href = path + (title ? title + '@' : '') + hash;`,
-                          cssChunkLoaderCommon,
-                          'title && (tag.title = title);',
-                          `var isAlternate = tag.disabled = title && title != (window.${process
+                          `var isAlternate = title && title != (window.${process
                             .env.SKIN_FIELD || '__SKIN__'} || "${process.env
                             .SKIN || 'default'}");`,
-                          'isAlternate ? resolve() : (tag.onload = title ? function (event) {',
+                          `var href = path + (title ? title + '@' : '') + hash;`,
+                          'var REL = isAlternate ? alternate + sheet : sheet',
+                          cssChunkLoaderCommon,
+                          'title && (tag.title = title)',
+                          'isAlternate ? resolve((tag.disabled = true)) : (tag.onload = title ? function (event) {',
                           Template.indent([
                             'tag.disabled = true;',
                             'tag.disabled = false;',
+                            'tag.onload = null;',
                             'resolve(event);',
                           ]),
                           '} : resolve);',
@@ -600,7 +603,7 @@ class MiniCssExtractPlugin {
                             'reject(err);',
                           ]),
                           '};',
-                          'tag.rel = isAlternate ? "alternate " + REL : REL;',
+                          'tag.rel = REL;',
                           cssChunkLoaderAppend,
                         ]),
                         '});',
@@ -618,7 +621,6 @@ class MiniCssExtractPlugin {
 
             return Template.asString([
               prefix,
-              IfElseIf,
               Template.indent([
                 'promises.push(installedCssChunks[chunkId] = new Promise(function(resolve, reject) {',
                 Template.indent([
