@@ -586,9 +586,9 @@ class MiniCssExtractPlugin {
                           'title && (tag.title = title)',
                           'isAlternate ? resolve((tag.disabled = true)) : (tag.onload = title ? function (event) {',
                           Template.indent([
+                            'tag.onload = null;',
                             'tag.disabled = true;',
                             'tag.disabled = false;',
-                            'tag.onload = null;',
                             'resolve(event);',
                           ]),
                           '} : resolve);',

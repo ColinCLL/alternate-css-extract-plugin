@@ -1,6 +1,6 @@
 {
   "name": "alternate-css-extract-plugin",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "extracts CSS into separate files, identifying alternate stylesheet by skin parameter",
   "license": "MIT",
   "repository": "Maorey/alternate-css-extract-plugin",
